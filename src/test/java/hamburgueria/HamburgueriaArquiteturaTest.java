@@ -5,6 +5,7 @@ import hamburgueria.core.*;
 import hamburgueria.decorator.*;
 import hamburgueria.factory.*;
 import hamburgueria.singleton.*;
+import hamburgueria.observer.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -112,5 +113,76 @@ class HamburgueriaArquiteturaTest {
         pedido.avancarEstado(); // Pronto
         pedido.avancarEstado(); // Entregue
         assertEquals("Entregue", pedido.getStatus());
+    }
+
+
+
+    @Test
+    void deveNotificarClienteSobreStatusDoPedido() {
+        Pedido pedido = new PedidoBalcao(new PagamentoCartao());
+        Cliente cliente = new Cliente("João");
+        pedido.addObservador(cliente);
+
+        pedido.avancarEstado(); // Em Preparo
+        assertEquals("João, seu pedido está: Em Preparo", cliente.getNotificacoes().get(0));
+
+        pedido.avancarEstado(); // Pronto
+        assertEquals("João, seu pedido está: Pronto", cliente.getNotificacoes().get(1));
+
+        pedido.avancarEstado(); // Entregue
+        assertEquals("João, seu pedido está: Entregue", cliente.getNotificacoes().get(2));
+    }
+
+    @Test
+    void deveNotificarVariosClientesSobreStatusDoPedido() {
+        Pedido pedido = new PedidoDelivery(new PagamentoPix());
+        Cliente cliente1 = new Cliente("João");
+        Cliente cliente2 = new Cliente("Maria");
+        pedido.addObservador(cliente1);
+        pedido.addObservador(cliente2);
+
+        pedido.avancarEstado(); // Em Preparo
+        assertEquals("João, seu pedido está: Em Preparo", cliente1.getNotificacoes().getFirst());
+        assertEquals("Maria, seu pedido está: Em Preparo", cliente2.getNotificacoes().getFirst());
+    }
+
+    @Test
+    void naoDeveNotificarClienteNaoInscrito() {
+        Pedido pedido = new PedidoBalcao(new PagamentoCartao());
+        Cliente cliente = new Cliente("João");
+        // Cliente NÃO adicionado como observador
+
+        pedido.avancarEstado();
+        assertTrue(cliente.getNotificacoes().isEmpty());
+    }
+
+    @Test
+    void deveNotificarCancelamentoDoPedido() {
+        Pedido pedido = new PedidoDelivery(new PagamentoCartao());
+        Cliente cliente = new Cliente("João");
+        pedido.addObservador(cliente);
+
+        pedido.cancelarPedido();
+        assertEquals("João, seu pedido está: Cancelado", cliente.getNotificacoes().getFirst());
+    }
+
+    @Test
+    void deveNotificarDevolucaoDoPedido() {
+        Pedido pedido = new PedidoBalcao(new PagamentoPix());
+        Cliente cliente = new Cliente("João");
+        pedido.addObservador(cliente);
+
+        pedido.devolverPedido();
+        assertEquals("João, confirmamos a devolução do seu pedido.", cliente.getNotificacoes().getFirst());
+    }
+
+    @Test
+    void deveMudarEstadoAposDevolucao() {
+        Pedido pedido = new PedidoBalcao(new PagamentoPix());
+        pedido.devolverPedido();
+        assertEquals("Devolução", pedido.getStatus());
+
+        pedido.avancarEstado(); // Tentativa de avanço
+        assertEquals("Devolução", pedido.getStatus()); // Continua em devolução
     }
 }

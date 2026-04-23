@@ -1,5 +1,7 @@
 package hamburgueria.bridge;
 import hamburgueria.core.Item;
+import hamburgueria.observer.ClienteObserver;
+import hamburgueria.state.Devolucao;
 import hamburgueria.state.EstadoPedido;
 import hamburgueria.state.Recebido;
 import java.util.ArrayList;
@@ -11,10 +13,34 @@ public abstract class Pedido {
     protected EstadoPedido estadoAtual;
     protected List<Item> itens = new ArrayList<>();
 
+    protected List<ClienteObserver> observadores = new ArrayList<>();
+
     public Pedido(FormaPagamento formaPagamento) {
         this.formaPagamento = formaPagamento;
         this.estadoAtual = new Recebido(); // Estado inicial
     }
+
+
+    // Métodos para o Padrão Observer
+    public void addObservador(ClienteObserver o) {
+        this.observadores.add(o);
+    }
+
+
+
+    public void notificarObservadores() {
+        for (ClienteObserver o : observadores) {
+            o.notificarStatus(this.estadoAtual.getNomeEstado());
+        }
+    }
+
+
+    public void notificarDevolucaoObservadores() {
+        for (ClienteObserver o : observadores) {
+            o.notificarDevolucao();
+        }
+    }
+
 
     public void adicionarItem(Item item) {
         this.itens.add(item);
@@ -22,10 +48,19 @@ public abstract class Pedido {
 
     public void avancarEstado() {
         this.estadoAtual = this.estadoAtual.avancar();
+        notificarObservadores();
     }
 
     public void cancelarPedido() {
         this.estadoAtual = this.estadoAtual.cancelar();
+        notificarObservadores();
+    }
+
+
+    public void devolverPedido() {
+
+        this.estadoAtual = new Devolucao();
+        notificarDevolucaoObservadores();
     }
 
     public String getStatus() {
