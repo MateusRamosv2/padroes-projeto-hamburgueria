@@ -9,6 +9,7 @@ import hamburgueria.observer.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import hamburgueria.chainofresponsibility.*;
 
 class HamburgueriaArquiteturaTest {
 
@@ -185,4 +186,77 @@ class HamburgueriaArquiteturaTest {
         pedido.avancarEstado(); // Tentativa de avanço
         assertEquals("Devolução", pedido.getStatus()); // Continua em devolução
     }
+
+
+    @Test
+    void deveVerificarHierarquiaDaCadeiaDeResponsabilidade() {
+
+        FuncionarioFinanceiro financeiro = new FuncionarioFinanceiro(null);
+        FuncionarioGerente gerente = new FuncionarioGerente(financeiro);
+        FuncionarioAtendente atendente = new FuncionarioAtendente(gerente);
+
+
+
+        assertEquals(gerente, atendente.getSuperior());
+        assertEquals(financeiro, gerente.getSuperior());
+
+        // O financeiro é o topo da cadeia, então o superior dele deve ser nulo
+        assertNull(financeiro.getSuperior());
+    }
+
+
+
+    @Test
+    void deveResolverReclamacaoDeLancheFrioComAtendente() {
+        FuncionarioFinanceiro financeiro = new FuncionarioFinanceiro(null);
+        FuncionarioGerente gerente = new FuncionarioGerente(financeiro);
+        FuncionarioAtendente atendente = new FuncionarioAtendente(gerente);
+
+        Reclamacao reclamacao = new Reclamacao(TipoReclamacaoLancheFrio.getInstancia());
+        assertEquals("Atendente", atendente.tratarReclamacao(reclamacao));
+    }
+
+    @Test
+    void deveEscalarReclamacaoDeEstornoParaFinanceiro() {
+        FuncionarioFinanceiro financeiro = new FuncionarioFinanceiro(null);
+        FuncionarioGerente gerente = new FuncionarioGerente(financeiro);
+        FuncionarioAtendente atendente = new FuncionarioAtendente(gerente);
+
+        Reclamacao reclamacao = new Reclamacao(TipoReclamacaoEstorno.getInstancia());
+        // O atendente não resolve, o gerente não resolve, o financeiro resolve.
+        assertEquals("Financeiro", atendente.tratarReclamacao(reclamacao));
+    }
+
+    @Test
+    void deveIntegrarTodosOsOitoPadroesSimultaneamente() {
+        // 1. Singleton (Taxa)
+        Configuracao.getInstance().setTaxaEntrega(12.0f);
+
+
+        FabricaCombo fabrica = new FabricaComboTradicional();
+        Item pedidoFinal = new Queijo(fabrica.criarHamburguer());
+
+
+        Pedido pedido = new PedidoDelivery(new PagamentoPix());
+        Cliente cliente = new Cliente("Mateus");
+        pedido.addObservador(cliente);
+        pedido.adicionarItem(pedidoFinal);
+
+        pedido.avancarEstado();
+        pedido.devolverPedido();
+
+
+        FuncionarioFinanceiro financeiro = new FuncionarioFinanceiro(null);
+        FuncionarioGerente gerente = new FuncionarioGerente(financeiro);
+        FuncionarioAtendente atendente = new FuncionarioAtendente(gerente);
+
+        Reclamacao erroNoPix = new Reclamacao(TipoReclamacaoEstorno.getInstancia());
+
+
+        assertEquals("Devolução", pedido.getStatus());
+        assertEquals("Financeiro", atendente.tratarReclamacao(erroNoPix));
+        assertEquals("Mateus, confirmamos a devolução do seu pedido.", cliente.getNotificacoes().getLast());
+    }
+
+
 }
