@@ -1,15 +1,8 @@
 package hamburgueria;
 
-import hamburgueria.bridge.*;
-import hamburgueria.core.*;
-import hamburgueria.decorator.*;
-import hamburgueria.factory.*;
-import hamburgueria.singleton.*;
-import hamburgueria.observer.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import hamburgueria.chainofresponsibility.*;
 
 class HamburgueriaArquiteturaTest {
 

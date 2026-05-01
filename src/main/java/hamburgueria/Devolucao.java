@@ -1,0 +1,7 @@
+package hamburgueria;
+
+public class Devolucao implements EstadoPedido {
+    public EstadoPedido avancar() { return this; }
+    public EstadoPedido cancelar() { return this; }
+    public String getNomeEstado() { return "Devolução"; }
+}
