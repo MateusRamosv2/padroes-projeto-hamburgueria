@@ -71,4 +71,26 @@ public abstract class Pedido {
     }
 
     public abstract float calcularTotalFinal();
+
+
+
+    public abstract String obterInstrucaoEntrega();
+
+
+    public final String gerarResumo() {
+        StringBuilder resumo = new StringBuilder();
+        resumo.append("=== RESUMO DO PEDIDO ===\n");
+        resumo.append("Status: ").append(this.getStatus()).append("\n");
+        resumo.append("Itens:\n");
+        for (Item item : itens) {
+            resumo.append("- ").append(item.getDescricao())
+                    .append(" (R$ ").append(String.format("%.2f", item.getPreco())).append(")\n");
+        }
+        resumo.append("Total a Pagar: R$ ").append(String.format("%.2f", this.calcularTotalFinal())).append("\n");
+        resumo.append("Instrução: ").append(this.obterInstrucaoEntrega());
+
+        return resumo.toString();
+    }
+
+
 }

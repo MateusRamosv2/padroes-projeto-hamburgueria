@@ -252,4 +252,32 @@ class HamburgueriaArquiteturaTest {
     }
 
 
+    @Test
+    void deveGerarResumoPedidoBalcao() {
+        Pedido pedido = new PedidoBalcao(new PagamentoCartao());
+        pedido.adicionarItem(new HamburguerCarne()); // 25.0
+
+        String resumo = pedido.gerarResumo();
+
+        assertTrue(resumo.contains("Status: Recebido"));
+        assertTrue(resumo.contains("Total a Pagar: R$ 25,00"));
+        assertTrue(resumo.contains("Retirar no balcão"));
+    }
+
+    @Test
+    void deveGerarResumoPedidoDelivery() {
+        Configuracao.getInstance().setTaxaEntrega(10.0f);
+        Pedido pedido = new PedidoDelivery(new PagamentoCartao());
+        pedido.adicionarItem(new HamburguerCarne()); // 25.0 + 10.0 = 35.0
+
+        String resumo = pedido.gerarResumo();
+
+        assertTrue(resumo.contains("Status: Recebido"));
+        assertTrue(resumo.contains("Total a Pagar: R$ 35,00"));
+        assertTrue(resumo.contains("Aguardar o motoboy"));
+    }
+
+
+
+
 }
