@@ -23,4 +23,25 @@ public class Cliente implements ClienteObserver {
     public List<String> getNotificacoes() {
         return notificacoes;
     }
+
+
+    // --- Novos métodos para o Padrão Mediator ---
+
+    public String elogiarCozinha(String mensagem) {
+        return OuvidoriaHamburgueria.getInstancia().receberElogioCozinha(mensagem);
+    }
+
+    public String reclamarCozinha(String mensagem) {
+        return OuvidoriaHamburgueria.getInstancia().receberReclamacaoCozinha(mensagem);
+    }
+
+    public String elogiarAdministracao(String mensagem) {
+        return OuvidoriaHamburgueria.getInstancia().receberElogioAdministracao(mensagem);
+    }
+
+    public String reclamarAdministracao(String mensagem) {
+        return OuvidoriaHamburgueria.getInstancia().receberReclamacaoAdministracao(mensagem);
+    }
+
+
 }
