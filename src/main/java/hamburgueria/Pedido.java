@@ -92,5 +92,10 @@ public abstract class Pedido {
         return resumo.toString();
     }
 
+    // --- Padrão Facade ---
+    public boolean podeSerPreparado() {
+        return PedidoFacade.autorizarPreparo(this);
+    }
+
 
 }
