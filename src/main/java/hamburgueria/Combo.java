@@ -6,7 +6,7 @@ import java.util.List;
 public class Combo implements Item {
     private String nomeCombo;
     private List<Item> itensCombo = new ArrayList<>();
-    private float desconto; // Ex: 0.10 para 10% de desconto
+    private float desconto;
 
     public Combo(String nomeCombo, float desconto) {
         this.nomeCombo = nomeCombo;
@@ -21,7 +21,7 @@ public class Combo implements Item {
     public float getPreco() {
         float total = 0;
         for (Item item : itensCombo) {
-            total += item.getPreco(); // Recursividade do Composite!
+            total += item.getPreco();
         }
         return total - (total * desconto);
     }
