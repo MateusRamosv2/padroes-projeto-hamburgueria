@@ -13,21 +13,21 @@ class ComboTest {
         Item refri = new Refrigerante(); // Preço: 8.0
 
 
-        // 2. Criando o Composto (Combo com 10% de desconto)
+
         Combo comboClassico = new Combo("Combo Clássico", 0.10f);
         comboClassico.adicionarItemCombo(lanche);
         comboClassico.adicionarItemCombo(batata);
         comboClassico.adicionarItemCombo(refri);
 
-        // 3. Validações do Composite
+
         assertEquals("Combo Clássico (Hambúrguer de Carne + Queijo + Batata Frita Média + Refrigerante Lata)", comboClassico.getDescricao());
         assertEquals(41.4f, comboClassico.getPreco(), 0.01f); // 46.0 - 10% = 41.4
     }
 
     @Test
     void deveIntegrarComboNoPedidoBuilderPerfeitamente() {
-        // Criando um combo simples
-        Combo combo = new Combo("Combo Simples", 0.0f); // Sem desconto para facilitar
+
+        Combo combo = new Combo("Combo Simples", 0.0f);
         combo.adicionarItemCombo(new HamburguerCarne()); // 25.0
         combo.adicionarItemCombo(new Refrigerante()); // 8.0
 
