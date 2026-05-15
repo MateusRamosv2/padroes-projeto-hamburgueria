@@ -10,4 +10,9 @@ public class Refrigerante implements Item {
     public String getDescricao() {
         return "Refrigerante Lata";
     }
+
+    @Override
+    public String aceitar(VisitorItem visitor) {
+        return visitor.visitar(this);
+    }
 }
