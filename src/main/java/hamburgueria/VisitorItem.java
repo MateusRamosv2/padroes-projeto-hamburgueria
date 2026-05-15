@@ -7,4 +7,5 @@ public interface VisitorItem {
     String visitar(Combo combo);
     String visitar(Bacon bacon);
     String visitar(Queijo queijo);
+    String visitar(HamburguerVegano hamburguerVegano);
 }
