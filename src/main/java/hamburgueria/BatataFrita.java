@@ -10,4 +10,9 @@ public class BatataFrita implements Item {
     public String getDescricao() {
         return "Batata Frita Média";
     }
+
+    @Override
+    public String aceitar(VisitorItem visitor) {
+        return visitor.visitar(this);
+    }
 }
