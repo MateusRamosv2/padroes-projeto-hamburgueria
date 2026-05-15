@@ -17,4 +17,9 @@ public abstract class AdicionalDecorator implements Item {
     public float getPreco() {
         return itemDecorado.getPreco() + getPrecoAdicional();
     }
+
+    public Item getItemDecorado() {
+        return this.itemDecorado;
+    }
+
 }
