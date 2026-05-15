@@ -1,19 +1,19 @@
 package hamburgueria;
 
 public class FabricaComboTradicional implements FabricaCombo {
-    public Item criarHamburguer() { return new HamburguerCarne(); }
 
-    public Item criarAcompanhamento() {
-        return new Item() {
-            public String getDescricao() { return "Batata Frita Média"; }
-            public float getPreco() { return 10.0f; }
-        };
+    @Override
+    public Item criarHamburguer() {
+        return new HamburguerCarne();
     }
 
+    @Override
+    public Item criarAcompanhamento() {
+        return new BatataFrita(); // Usando a classe concreta que já tem o Visitor!
+    }
+
+    @Override
     public Item criarBebida() {
-        return new Item() {
-            public String getDescricao() { return "Refrigerante Cola"; }
-            public float getPreco() { return 8.0f; }
-        };
+        return new Refrigerante(); // Usando a classe concreta que já tem o Visitor!
     }
 }
