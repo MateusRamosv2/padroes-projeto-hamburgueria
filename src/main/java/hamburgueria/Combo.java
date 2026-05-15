@@ -38,4 +38,14 @@ public class Combo implements Item {
         descricao.append(")");
         return descricao.toString();
     }
+
+    public List<Item> getItensCombo() {
+        return this.itensCombo;
+    }
+
+    @Override
+    public String aceitar(VisitorItem visitor) {
+        return visitor.visitar(this);
+    }
+
 }
