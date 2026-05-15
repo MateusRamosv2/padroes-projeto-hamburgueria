@@ -39,4 +39,9 @@ public class AuditoriaDietaVisitor implements VisitorItem {
         }
         return auditoria.toString();
     }
+
+    @Override
+    public String visitar(HamburguerVegano hamburguerVegano) {
+        return "[Vegano] Hambúrguer à base de plantas/soja";
+    }
 }
