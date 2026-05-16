@@ -9,7 +9,7 @@ class ClienteTotemTest {
     void deveArmazenarHistoricoDePedidos() {
         ClienteTotem totem = new ClienteTotem("Mateus Ramos");
 
-        // Pedido 1
+
         totem.adicionarAoCarrinho(new HamburguerCarne());
         totem.finalizarCompra();
 
@@ -21,5 +21,30 @@ class ClienteTotemTest {
         assertEquals(2, totem.getQuantidadePedidosNoHistorico());
         assertTrue(totem.getCarrinhoAtual().isEmpty());
     }
+
+    @Test
+    void deveRestaurarPedidoAnteriorComItensComplexos() {
+        ClienteTotem totem = new ClienteTotem("Mateus Ramos");
+
+
+        Item lancheDecorado = new Bacon(new Queijo(new HamburguerCarne()));
+        totem.adicionarAoCarrinho(lancheDecorado);
+        totem.finalizarCompra();
+
+
+        Combo combo = new Combo("Combo Básico", 0.0f);
+        combo.adicionarItemCombo(new HamburguerCarne());
+        totem.adicionarAoCarrinho(combo);
+        totem.finalizarCompra();
+
+
+        totem.restaurarPedidoAnterior(0);
+
+
+        assertEquals(1, totem.getCarrinhoAtual().size());
+        assertTrue(totem.getCarrinhoAtual().get(0).getDescricao().contains("Bacon"));
+        assertTrue(totem.getCarrinhoAtual().get(0).getDescricao().contains("Queijo"));
+    }
+
 
 }
