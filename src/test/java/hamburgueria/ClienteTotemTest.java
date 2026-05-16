@@ -47,4 +47,17 @@ class ClienteTotemTest {
     }
 
 
+    @Test
+    void deveRetornarExcecaoParaIndiceDeHistoricoInvalido() {
+        try {
+            ClienteTotem totem = new ClienteTotem("Mateus Ramos");
+
+            totem.restaurarPedidoAnterior(0);
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertEquals("Índice de histórico inválido", e.getMessage());
+        }
+    }
+
+
 }
