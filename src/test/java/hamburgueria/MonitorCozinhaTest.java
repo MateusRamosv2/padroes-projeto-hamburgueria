@@ -39,4 +39,29 @@ class MonitorCozinhaTest {
 
         assertEquals(2, contagemCozinha);
     }
+
+    @Test
+    void deveIterarFiltrandoApenasPedidosDoBalcao() {
+        MonitorCozinha monitor = new MonitorCozinha();
+
+
+        monitor.receberPedido(new PedidoBuilder().setTipoPedido("Balcao").setFormaPagamento(new PagamentoPix()).adicionarItem(new HamburguerCarne()).build());
+        monitor.receberPedido(new PedidoBuilder().setTipoPedido("Delivery").setFormaPagamento(new PagamentoPix()).adicionarItem(new BatataFrita()).build());
+        monitor.receberPedido(new PedidoBuilder().setTipoPedido("Delivery").setFormaPagamento(new PagamentoPix()).adicionarItem(new Refrigerante()).build()); // <-- Alterado aqui!
+        monitor.receberPedido(new PedidoBuilder().setTipoPedido("Balcao").setFormaPagamento(new PagamentoPix()).adicionarItem(new HamburguerCarne()).build());
+
+        monitor.setFiltroAtivo("Balcao");
+
+        int contagemBalcao = 0;
+        for (Pedido pedidoVisivel : monitor) {
+            contagemBalcao++;
+            assertEquals("Balcao", pedidoVisivel.getTipoPedido());
+        }
+
+
+        assertEquals(2, contagemBalcao);
+    }
+
+
+
 }
