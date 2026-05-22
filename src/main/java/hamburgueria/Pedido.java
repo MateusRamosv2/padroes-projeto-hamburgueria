@@ -98,4 +98,19 @@ public abstract class Pedido {
     }
 
 
+
+
+    public boolean isCancelado() {
+
+        return this.getStatus().toLowerCase().contains("cancelado");
+    }
+
+    public String getTipoPedido() {
+
+
+
+        return this.getClass().getSimpleName().replace("Pedido", "");
+    }
+
+
 }
