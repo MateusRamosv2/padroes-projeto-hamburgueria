@@ -62,6 +62,23 @@ class MonitorCozinhaTest {
         assertEquals(2, contagemBalcao);
     }
 
+    @Test
+    void deveIterarLimpandoOFiltroParaMostrarTodosOsPedidos() {
+        MonitorCozinha monitor = new MonitorCozinha();
 
+
+        monitor.receberPedido(new PedidoBuilder().setTipoPedido("Balcao").setFormaPagamento(new PagamentoPix()).adicionarItem(new HamburguerCarne()).build());
+        monitor.receberPedido(new PedidoBuilder().setTipoPedido("Delivery").setFormaPagamento(new PagamentoPix()).adicionarItem(new Refrigerante()).build());
+
+        monitor.setFiltroAtivo("Balcao");
+        monitor.limparFiltro();
+
+        int contagemTotal = 0;
+        for (Pedido pedidoVisivel : monitor) {
+            contagemTotal++;
+        }
+
+        assertEquals(2, contagemTotal);
+    }
 
 }
