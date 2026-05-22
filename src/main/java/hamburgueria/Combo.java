@@ -3,7 +3,7 @@ package hamburgueria;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Combo implements Item {
+public class Combo implements Item, Cloneable {
     private String nomeCombo;
     private List<Item> itensCombo = new ArrayList<>();
     private float desconto;
@@ -15,6 +15,11 @@ public class Combo implements Item {
 
     public void adicionarItemCombo(Item item) {
         this.itensCombo.add(item);
+    }
+
+
+    public void removerItemCombo(Item item) {
+        this.itensCombo.remove(item);
     }
 
     @Override
@@ -47,5 +52,20 @@ public class Combo implements Item {
     public String aceitar(VisitorItem visitor) {
         return visitor.visitar(this);
     }
+
+    @Override
+    public Combo clone() {
+        try {
+            // Faz a cópia superficial do objeto (copia o nomeCombo e o desconto)
+            Combo comboClone = (Combo) super.clone();
+
+            comboClone.itensCombo = new ArrayList<>(this.itensCombo);
+
+            return comboClone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError("Erro ao clonar o Combo", e);
+        }
+    }
+
 
 }
