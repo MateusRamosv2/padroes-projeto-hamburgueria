@@ -34,7 +34,7 @@ class HamburgueriaArquiteturaTest {
         Item bebida = fabrica.criarBebida();
 
         assertEquals("Hambúrguer de Carne", lanche.getDescricao());
-        assertEquals("Refrigerante Cola", bebida.getDescricao());
+        assertEquals("Refrigerante Lata", bebida.getDescricao());
     }
 
     @Test
