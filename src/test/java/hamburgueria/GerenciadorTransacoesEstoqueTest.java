@@ -30,4 +30,15 @@ class GerenciadorTransacoesEstoqueTest {
         assertEquals(98, estoque.consultarEstoque("Hambúrguer de Carne"));
     }
 
+    @Test
+    void deveLancarExcecaoAoTentarBaixarMaisDoQueOEstoquePermite() {
+
+        ComandoEstoque baixaInvalida = new ComandoBaixarEstoque(estoque, "Hambúrguer de Carne", 150);
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            gerenciador.processarTransacao(baixaInvalida);
+        });
+
+        assertEquals("Estoque insuficiente para o ingrediente: Hambúrguer de Carne", exception.getMessage());
+    }
 }
