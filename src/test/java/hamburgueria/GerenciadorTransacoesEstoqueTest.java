@@ -41,4 +41,23 @@ class GerenciadorTransacoesEstoqueTest {
 
         assertEquals("Estoque insuficiente para o ingrediente: Hambúrguer de Carne", exception.getMessage());
     }
+
+    @Test
+    void deveEstornarIngredientesSeOPedidoForCancelado() {
+        ComandoEstoque baixaPao = new ComandoBaixarEstoque(estoque, "Pão Brioche", 1);
+        ComandoEstoque baixaCarne = new ComandoBaixarEstoque(estoque, "Hambúrguer de Carne", 1);
+
+        gerenciador.processarTransacao(baixaPao);
+        gerenciador.processarTransacao(baixaCarne);
+
+        assertEquals(99, estoque.consultarEstoque("Pão Brioche"));
+        assertEquals(99, estoque.consultarEstoque("Hambúrguer de Carne"));
+
+
+        gerenciador.estornarUltimaTransacao();
+
+        assertEquals(99, estoque.consultarEstoque("Pão Brioche"));
+        assertEquals(100, estoque.consultarEstoque("Hambúrguer de Carne"));
+    }
+
 }
