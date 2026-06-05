@@ -25,6 +25,17 @@ class RelatorioFinanceiroProxyTest {
         assertNotNull(proxy.gerarRelatorioFaturamento());
     }
 
+    @Test
+    void deveBloquearAcessoEAtirarExcecaoParaAtendente() {
+        FuncionarioHamburgueria atendente = new FuncionarioAtendente(new FuncionarioGerente(null));
+        RelatorioFinanceiro proxy = new RelatorioFinanceiroProxy(atendente, "2026-06-05");
 
+
+        Exception excecao = assertThrows(SecurityException.class, () -> {
+            proxy.gerarRelatorioFaturamento();
+        });
+
+        assertEquals("Acesso Negado: O cargo de Atendente não possui permissão para visualizar o faturamento.", excecao.getMessage());
+    }
 
 }
