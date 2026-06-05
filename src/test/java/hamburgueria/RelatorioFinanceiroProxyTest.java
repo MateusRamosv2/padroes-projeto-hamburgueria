@@ -16,4 +16,15 @@ class RelatorioFinanceiroProxyTest {
         assertEquals(5, proxy.gerarRelatorioFaturamento().size());
         assertTrue(proxy.gerarRelatorioFaturamento().get(1).contains("Receita Total: R$"));
     }
+
+    @Test
+    void devePermitirAcessoAosDadosSigilososParaFinanceiro() {
+        FuncionarioHamburgueria financeiro = new FuncionarioFinanceiro(new FuncionarioGerente(null));
+        RelatorioFinanceiro proxy = new RelatorioFinanceiroProxy(financeiro, "2026-06-05");
+
+        assertNotNull(proxy.gerarRelatorioFaturamento());
+    }
+
+
+
 }
