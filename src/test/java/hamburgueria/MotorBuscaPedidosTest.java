@@ -37,5 +37,14 @@ class MotorBuscaPedidosTest {
         assertFalse(motor.interpretar(pedidoBaratoBalcao));
     }
 
+    @Test
+    void deveEncontrarPedidosPorRegraAlternativa() {
+
+        MotorBuscaPedidos motor = new MotorBuscaPedidos("TIPO Balcao OU VALOR_MAIOR_QUE 100");
+
+        assertTrue(motor.interpretar(pedidoBaratoBalcao));
+        assertFalse(motor.interpretar(pedidoCaroDelivery));
+    }
+
 
 }
