@@ -46,5 +46,12 @@ class MotorBuscaPedidosTest {
         assertFalse(motor.interpretar(pedidoCaroDelivery));
     }
 
+    @Test
+    void deveLancarExcecaoAoDigitarBuscaInvalida() {
+        Exception excecao = assertThrows(IllegalArgumentException.class, () -> {
+            new MotorBuscaPedidos("TIPO Delivery E CHUVA");
+        });
 
+        assertEquals("Filtro inválido no lado direito do operador lógico", excecao.getMessage());
+    }
 }
