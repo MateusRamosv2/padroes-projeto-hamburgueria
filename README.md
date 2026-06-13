@@ -265,3 +265,56 @@ classDiagram
     FiltroPedidoExpressao <|.. OperadorE
     FiltroPedidoExpressao <|.. FiltroValorMaiorQue
     MotorBuscaPedidos o-- FiltroPedidoExpressao : constrói AST
+
+   ```
+
+   ---
+
+   ## Diagrama de Estados
+
+O sistema de gestão da hamburgueria utiliza o Padrão **State** para governar de forma estrita o ciclo de vida de cada `Pedido`. Esta abordagem elimina falhas comuns de lógica (como enviar para a chapa um pedido já cancelado) e garante que o objeto mude o seu comportamento dinamicamente de acordo com a sua fase operacional.
+
+---
+
+### Visão Arquitetural da Máquina de Estados
+
+* **Estado Inicial (`Recebido`):** Assim que o `PedidoBuilder` finaliza a construção da instância, o pedido nasce obrigatoriamente no estado `Recebido`. A partir daqui, ele aguarda as validações do `PedidoFacade` para avançar à cozinha.
+* **Estados de Transição (`EmPreparo`, `Pronto`):** Representam o fluxo de trabalho natural. Nestas fases, os pedidos podem progredir utilizando o método `avancarEstado()` ou ser interrompidos prematuramente via `cancelarPedido()`.
+* **Estados Terminais (`Entregue`, `Cancelado`, `Devolucao`):** Uma vez que o pedido alcança um destes três estados, o seu ciclo de vida é encerrado. Decisão arquitetural de segurança: tentativas de chamar `avancar()` ou `cancelar()` num estado terminal são anuladas retornando a própria instância (`return this;`), prevenindo transições ilegais.
+* **Delegação de Responsabilidades (Observer):** O Padrão **State** é responsável apenas pelas regras de transição. É a classe de contexto (`Pedido`) que gerencia a comunicação e aciona o **Observer**, notificando os clientes de forma centralizada após cada mudança de estado bem-sucedida.
+
+O diagrama abaixo ilustra essa máquina de estados operante:
+
+```mermaid
+stateDiagram-v2
+    direction TB
+    
+    [*] --> Recebido : Instanciado via Builder
+    
+    note right of Recebido
+        A interface EstadoPedido dita as regras.
+        O objeto Pedido aciona o Observer nas transições.
+    end note
+    
+    Recebido --> EmPreparo : avancarEstado()
+    Recebido --> Cancelado : cancelarPedido()
+    Recebido --> Devolucao : devolverPedido()
+    
+    EmPreparo --> Pronto : avancarEstado()
+    EmPreparo --> Cancelado : cancelarPedido()
+    EmPreparo --> Devolucao : devolverPedido()
+    
+    Pronto --> Entregue : avancarEstado()
+    Pronto --> Cancelado : cancelarPedido() 
+    Pronto --> Devolucao : devolverPedido()
+
+    %% Transições para Estados Terminais encerram o ciclo de vida
+    Entregue --> [*] : finalizar()
+    Cancelado --> [*] : encerrar()
+    Devolucao --> [*] : estornar_e_encerrar()
+    
+    note right of Entregue
+        Estados Terminais (Finais).
+        Chamadas adicionais de avancar() ou 
+        cancelar() retornam o próprio estado (return this).
+    end note
