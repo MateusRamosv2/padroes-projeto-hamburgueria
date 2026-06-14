@@ -14,7 +14,7 @@ Através de uma arquitetura escalável e focada nos princípios **SOLID**, o sis
 
 ## Padrões de Projeto Implementados
 
-### 🛠️ Padrões Criacionais (Criação de Objetos)
+### Padrões Criacionais (Criação de Objetos)
 1. **Builder:** `PedidoBuilder` constrói gradativamente objetos complexos (`Pedido`), mantendo o estado dos itens e forma de pagamento até a montagem final (`build()`).
 2. **Factory Method / Abstract Factory:** `FabricaComboTradicional` encapsula a criação padronizada de famílias de produtos (Hambúrguer, Batata, Bebida).
 3. **Prototype:** O `Cardapio` mantém instâncias base de Combos que implementam `Cloneable`. O cliente recebe um `.clone()` para customizar sem alterar a receita original.
@@ -43,6 +43,21 @@ Através de uma arquitetura escalável e focada nos princípios **SOLID**, o sis
 22. **Visitor:** `AuditoriaDietaVisitor` percorre as estruturas (visitando até mesmo *Decorators* e *Composites*) para extrair relatórios paralelos (como tabelas de alergênicos) sem poluir o domínio dos Itens.
 
 ---
+
+## Qualidade de Software e Testes Automatizados
+
+A arquitetura robusta deste projeto foi construída e validada iterativamente através de testes automatizados utilizando a biblioteca **JUnit 5 (Jupiter)**. A presença da suíte contendo **15 classes de teste distintas** garante a estabilidade das regras de negócio e prova que os mais de 20 padrões de projeto operam em perfeita harmonia, sem gerar efeitos colaterais.
+
+**Mapeamento da Cobertura de Testes:**
+
+* **Integração e Core da Aplicação (`HamburgueriaArquiteturaTest`, `PedidoBuilderTest`, `CaixaTest`):** Comprovação de que os padrões *Builder*, *Decorator*, *Bridge*, *Strategy* e *Template Method* montam o pedido, aplicam adicionais e calculam as taxas financeiras de forma integrada e matematicamente precisa.
+* **Segurança e Validações (`RelatorioFinanceiroProxyTest`, `PedidoFacadeTest`):** Validação estrita do *Proxy* de proteção (garantindo que acessos sem privilégio disparem uma `SecurityException`) e atestado de que a *Facade* barra corretamente pedidos com pendências de estoque ou logística.
+* **Motores de Regras e Comportamento (`MotorBuscaPedidosTest`, `GerenciadorTransacoesEstoqueTest`, `OuvidoriaTest`):** Garantia de que a gramática textual do *Interpreter* filtra pedidos corretamente, que o *Command* realiza o estorno (Rollback/Ctrl+Z) de ingredientes com precisão, e que o *Mediator* roteia as mensagens entre cliente e cozinha sem acoplamento.
+* **Estruturas de Dados e Memória (`DetalheItemFactoryTest`, `CardapioTest`, `ComboTest`, `ClienteTotemTest`):** Testes rigorosos comprovando a economia de instâncias do *Flyweight*, a clonagem segura e independente do *Prototype*, o cálculo em árvore do *Composite* e a restauração fiel do histórico de carrinho através do *Memento*.
+* **Navegação, Logística e Auditoria (`MonitorCozinhaTest`, `AuditoriaDietaVisitorTest`, `LoggiAdapterTest`):** Verificação de que o *Iterator* ignora pedidos cancelados na chapa, que o *Visitor* varre itens complexos gerando alertas de alergênicos corretos, e que o *Adapter* traduz perfeitamente o nosso domínio para a API de logística simulada.
+
+---
+
 
 ## Diagrama de Classes Global
 
