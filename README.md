@@ -66,7 +66,7 @@ Este diagrama detalha a fidelidade arquitetural do sistema, mapeando a segregaç
 ```mermaid
 classDiagram
     %% ==========================================
-    %% SINGLETON & FACADE & MEDIATOR
+    %% SINGLETON & CONFIG
     %% ==========================================
     class Configuracao {
         <<Singleton>>
@@ -74,56 +74,40 @@ classDiagram
         -Configuracao()
         +getInstance()$ Configuracao
     }
-    
-    class PedidoFacade {
-        +autorizarPreparo(pedido: Pedido) boolean
-    }
-    
-    class OuvidoriaHamburgueria {
-        <<Mediator>>
-        -OuvidoriaHamburgueria instancia$
-        +receberReclamacaoCozinha(msg: String)
-        +receberElogioAdministracao(msg: String)
-    }
-
-    OuvidoriaHamburgueria --> SetorCozinha : notifica
-    OuvidoriaHamburgueria --> SetorAdministracao : notifica
 
     %% ==========================================
-    %% BUILDER & FACTORY & PROTOTYPE
+    %% BUILDER, FACTORY & PROTOTYPE
     %% ==========================================
     class PedidoBuilder {
         -Pedido pedido
-        -List~Item~ itens
-        -String tipoPedido
-        +setFormaPagamento() PedidoBuilder
-        +adicionarItem() PedidoBuilder
         +build() Pedido
     }
-
     class FabricaCombo {
         <<interface>>
         +criarHamburguer() Item
+        +criarAcompanhamento() Item
         +criarBebida() Item
     }
-    
+    class FabricaComboTradicional {
+        +criarHamburguer() Item
+        +criarAcompanhamento() Item
+        +criarBebida() Item
+    }
     class Cloneable {
         <<interface>>
         +clone() Object
     }
-    
     class Cardapio {
         -Map~String, Combo~ combosProntos
         +solicitarCombo(chave: String) Combo
     }
 
     FabricaCombo <|.. FabricaComboTradicional
-    Cloneable <|.. Combo
     Cardapio ..> Combo : clona (Prototype)
     PedidoBuilder o-- Pedido : constrói
 
     %% ==========================================
-    %% CORE: PEDIDO (BRIDGE, TEMPLATE, OBSERVER)
+    %% CORE PEDIDO & BRIDGE & OBSERVER
     %% ==========================================
     class Pedido {
         <<abstract>>
@@ -136,14 +120,30 @@ classDiagram
         +cancelarPedido()
         +calcularTotalFinal()* float
     }
+    class PedidoBalcao {
+        +calcularTotalFinal() float
+    }
+    class PedidoDelivery {
+        +calcularTotalFinal() float
+    }
+    class ClienteObserver {
+        <<interface>>
+        +notificarStatus(novoEstado: String)
+        +notificarDevolucao()
+    }
+    class Cliente {
+        -String nome
+        -List~String~ notificacoes
+    }
 
-    Pedido <|-- PedidoDelivery
     Pedido <|-- PedidoBalcao
+    Pedido <|-- PedidoDelivery
+    ClienteObserver <|.. Cliente
     Pedido o-- "*" ClienteObserver : observadores
     Pedido o-- FormaPagamento : delega (Bridge)
 
     %% ==========================================
-    %% COMPOSITE, DECORATOR, VISITOR, FLYWEIGHT
+    %% ITENS (COMPOSITE, DECORATOR, FLYWEIGHT, VISITOR)
     %% ==========================================
     class Item {
         <<interface>>
@@ -151,22 +151,25 @@ classDiagram
         +getPreco() float
         +aceitar(visitor: VisitorItem) String
     }
-
-    class Combo {
-        -List~Item~ itensCombo
-        +adicionarItemCombo(item: Item)
+    class HamburguerCarne { +aceitar() }
+    class HamburguerVegano { +aceitar() }
+    class BatataFrita { +aceitar() }
+    class Refrigerante { +aceitar() }
+    class Combo { 
+        -List~Item~ itensCombo 
+        +clone() Combo
     }
-
     class AdicionalDecorator {
         <<abstract>>
         #Item itemDecorado
     }
+    class Bacon { +getNomeAdicional() }
+    class Queijo { +getNomeAdicional() }
     
     class DetalheItem {
         +nome: String
         +calorias: String
     }
-    
     class DetalheItemFactory {
         -Map~String, DetalheItem~ cache
         +getDetalhe() DetalheItem
@@ -175,37 +178,66 @@ classDiagram
     class VisitorItem {
         <<interface>>
         +visitar(HamburguerCarne)
+        +visitar(BatataFrita)
         +visitar(Combo)
+        ...()
+    }
+    class AuditoriaDietaVisitor {
+        +visitar(HamburguerCarne)
     }
 
     Item <|.. HamburguerCarne
+    Item <|.. HamburguerVegano
+    Item <|.. BatataFrita
+    Item <|.. Refrigerante
     Item <|.. Combo
     Item <|.. AdicionalDecorator
     AdicionalDecorator <|-- Bacon
     AdicionalDecorator <|-- Queijo
     AdicionalDecorator o-- "1" Item : decora
     Combo o-- "*" Item : contém (Composite)
+    Combo ..|> Cloneable
     HamburguerCarne --> DetalheItemFactory : solicita
+    BatataFrita --> DetalheItemFactory : solicita
     DetalheItemFactory o-- "*" DetalheItem : armazena
     VisitorItem <|.. AuditoriaDietaVisitor
     VisitorItem --> Item : analisa
 
     %% ==========================================
-    %% STRATEGY (PAGAMENTO)
+    %% STRATEGY & PAGAMENTO (CAIXA)
     %% ==========================================
+    class FormaPagamento {
+        <<interface>>
+        +aplicarTaxas(valorTotal: float) float
+    }
+    class PagamentoCartao { +aplicarTaxas() }
+    class PagamentoPix { +aplicarTaxas() }
+
     class EstrategiaPagamento {
         <<interface>>
         +calcularPrecoFinal(valor: float) float
     }
-    class CalculadoraPagamento {
-        +calcular(estrategia: EstrategiaPagamento)
-    }
+    class EstrategiaPix { +calcularPrecoFinal() }
+    class EstrategiaCredito { +calcularPrecoFinal() }
+    class EstrategiaDebito { +calcularPrecoFinal() }
+    class EstrategiaBoleto { +calcularPrecoFinal() }
     
-    FormaPagamento <|.. PagamentoPix
+    class CalculadoraPagamento {
+        +calcular(estrategia: EstrategiaPagamento) float
+    }
+    class Caixa {
+        +pagarComPix()
+        +pagarComCredito()
+    }
+
     FormaPagamento <|.. PagamentoCartao
-    CalculadoraPagamento --> EstrategiaPagamento : utiliza
+    FormaPagamento <|.. PagamentoPix
     EstrategiaPagamento <|.. EstrategiaPix
-    EstrategiaPagamento <|.. EstrategiaCartao
+    EstrategiaPagamento <|.. EstrategiaCredito
+    EstrategiaPagamento <|.. EstrategiaDebito
+    EstrategiaPagamento <|.. EstrategiaBoleto
+    CalculadoraPagamento --> EstrategiaPagamento : utiliza
+    Caixa --> CalculadoraPagamento : orquestra
 
     %% ==========================================
     %% STATE (CICLO DE VIDA)
@@ -215,6 +247,12 @@ classDiagram
         +avancar() EstadoPedido
         +cancelar() EstadoPedido
     }
+    class Recebido { +avancar() }
+    class EmPreparo { +avancar() }
+    class Pronto { +avancar() }
+    class Entregue { +avancar() }
+    class Cancelado { +avancar() }
+    class Devolucao { +avancar() }
 
     Pedido *-- "1" EstadoPedido : estado atual
     EstadoPedido <|.. Recebido
@@ -225,13 +263,84 @@ classDiagram
     EstadoPedido <|.. Devolucao
 
     %% ==========================================
-    %% COMMAND & ADAPTER
+    %% FACADE & VALIDATORS
+    %% ==========================================
+    class PedidoFacade {
+        +autorizarPreparo(pedido: Pedido) boolean
+    }
+    class ValidadorPedido {
+        <<abstract>>
+        -List~Pedido~ pedidosComPendencia
+        +verificarPedidoComPendencia() boolean
+    }
+    class Estoque { <<Singleton>> }
+    class FinanceiroHamburgueria { <<Singleton>> }
+    class Logistica { <<Singleton>> }
+
+    ValidadorPedido <|-- Estoque
+    ValidadorPedido <|-- FinanceiroHamburgueria
+    ValidadorPedido <|-- Logistica
+    PedidoFacade ..> Estoque : verifica
+    PedidoFacade ..> FinanceiroHamburgueria : verifica
+    PedidoFacade ..> Logistica : verifica
+
+    %% ==========================================
+    %% MEDIATOR
+    %% ==========================================
+    class OuvidoriaHamburgueria {
+        <<Mediator>>
+        +receberReclamacaoCozinha(msg: String)
+    }
+    class Setor {
+        <<interface>>
+        +receberReclamacao(msg: String)
+    }
+    class SetorCozinha { +receberReclamacao() }
+    class SetorAdministracao { +receberReclamacao() }
+
+    Setor <|.. SetorCozinha
+    Setor <|.. SetorAdministracao
+    OuvidoriaHamburgueria --> SetorCozinha : roteia
+    OuvidoriaHamburgueria --> SetorAdministracao : roteia
+    Cliente --> OuvidoriaHamburgueria : envia msg
+
+    %% ==========================================
+    %% CHAIN OF RESPONSIBILITY
+    %% ==========================================
+    class FuncionarioHamburgueria {
+        <<abstract>>
+        -FuncionarioHamburgueria superior
+        +tratarReclamacao(rec: Reclamacao)
+    }
+    class FuncionarioAtendente { +getCargo() }
+    class FuncionarioGerente { +getCargo() }
+    class FuncionarioFinanceiro { +getCargo() }
+    
+    class Reclamacao { -TipoReclamacao tipo }
+    class TipoReclamacao { <<interface>> }
+    class TipoReclamacaoAtraso { }
+    class TipoReclamacaoEstorno { }
+    class TipoReclamacaoLancheFrio { }
+
+    FuncionarioHamburgueria <|-- FuncionarioAtendente
+    FuncionarioHamburgueria <|-- FuncionarioGerente
+    FuncionarioHamburgueria <|-- FuncionarioFinanceiro
+    FuncionarioHamburgueria o-- FuncionarioHamburgueria : sucessor (Chain)
+    FuncionarioHamburgueria --> Reclamacao : avalia
+    Reclamacao --> TipoReclamacao : possui
+    TipoReclamacao <|.. TipoReclamacaoAtraso
+    TipoReclamacao <|.. TipoReclamacaoEstorno
+    TipoReclamacao <|.. TipoReclamacaoLancheFrio
+
+    %% ==========================================
+    %% COMMAND
     %% ==========================================
     class ComandoEstoque {
         <<interface>>
         +executar()
         +desfazer()
     }
+    class ComandoBaixarEstoque { +executar() }
     class GerenciadorTransacoesEstoque {
         -List~ComandoEstoque~ historico
     }
@@ -239,47 +348,94 @@ classDiagram
         +darBaixa()
         +adicionarEstoque()
     }
-    
-    class ServicoEntregaExterno {
-        <<External API>>
-        +requestRider()
-    }
-    class LoggiAdapter {
-        -ApiLoggiExterna api
-    }
 
     ComandoEstoque <|.. ComandoBaixarEstoque
     GerenciadorTransacoesEstoque o-- "*" ComandoEstoque : invoker
     ComandoBaixarEstoque --> EstoqueIngredientes : receiver
-    IntegracaoLogistica <|.. LoggiAdapter
-    LoggiAdapter --> ServicoEntregaExterno : adapta (ApiLoggiExterna)
 
     %% ==========================================
-    %% CHAIN, PROXY, INTERPRETER
+    %% ADAPTER
     %% ==========================================
-    class FuncionarioHamburgueria {
-        <<abstract>>
-        -FuncionarioHamburgueria superior
-        +tratarReclamacao()
+    class IntegracaoLogistica {
+        <<interface>>
+        +despacharPedido()
+    }
+    class LoggiAdapter {
+        -ApiLoggiExterna api
+    }
+    class ApiLoggiExterna {
+        <<External API>>
+        +requestRider()
+    }
+
+    IntegracaoLogistica <|.. LoggiAdapter
+    LoggiAdapter --> ApiLoggiExterna : adapta
+
+    %% ==========================================
+    %% PROXY
+    %% ==========================================
+    class RelatorioFinanceiro {
+        <<interface>>
+        +gerarRelatorioFaturamento()
     }
     class RelatorioFinanceiroProxy {
         -RelatorioFinanceiroReal real
         -FuncionarioHamburgueria logado
     }
+    class RelatorioFinanceiroReal { +gerarRelatorioFaturamento() }
+
+    RelatorioFinanceiro <|.. RelatorioFinanceiroProxy
+    RelatorioFinanceiro <|.. RelatorioFinanceiroReal
+    RelatorioFinanceiroProxy --> RelatorioFinanceiroReal : controla acesso
+    RelatorioFinanceiroProxy --> FuncionarioHamburgueria : valida cargo
+
+    %% ==========================================
+    %% INTERPRETER
+    %% ==========================================
     class FiltroPedidoExpressao {
         <<interface>>
         +interpretar(pedido: Pedido) boolean
     }
+    class FiltroTipoPedido { +interpretar() }
+    class FiltroValorMaiorQue { +interpretar() }
+    class OperadorE { +interpretar() }
+    class OperadorOu { +interpretar() }
+    class MotorBuscaPedidos {
+        -FiltroPedidoExpressao arvoreSintatica
+        +interpretar()
+    }
 
-    FuncionarioHamburgueria <|-- FuncionarioAtendente
-    FuncionarioHamburgueria <|-- FuncionarioGerente
-    FuncionarioHamburgueria o-- FuncionarioHamburgueria : sucessor (Chain)
-    RelatorioFinanceiroProxy --> RelatorioFinanceiroReal : controla acesso
-    RelatorioFinanceiro <|.. RelatorioFinanceiroProxy
-    FiltroPedidoExpressao <|.. MotorBuscaPedidos
-    FiltroPedidoExpressao <|.. OperadorE
+    FiltroPedidoExpressao <|.. FiltroTipoPedido
     FiltroPedidoExpressao <|.. FiltroValorMaiorQue
+    FiltroPedidoExpressao <|.. OperadorE
+    FiltroPedidoExpressao <|.. OperadorOu
+    FiltroPedidoExpressao <|.. MotorBuscaPedidos
     MotorBuscaPedidos o-- FiltroPedidoExpressao : constrói AST
+    OperadorE o-- FiltroPedidoExpressao
+    OperadorOu o-- FiltroPedidoExpressao
+
+    %% ==========================================
+    %% ITERATOR & MEMENTO
+    %% ==========================================
+    class MonitorCozinha {
+        -List~Pedido~ filaDePreparo
+        +obterPedidosVisiveis()
+    }
+    class IteratorPedidosCozinha {
+        +hasNext()
+        +next()
+    }
+    class ClienteTotem {
+        -List~CarrinhoMemento~ historicoPedidos
+        +restaurarPedidoAnterior()
+    }
+    class CarrinhoMemento {
+        -List~Item~ itensCapturados
+    }
+
+    MonitorCozinha ..> IteratorPedidosCozinha : cria (Iterable)
+    ClienteTotem o-- "*" CarrinhoMemento : histórico
+    CarrinhoMemento o-- "*" Item : snapshot
 
    ```
 
