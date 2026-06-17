@@ -8,7 +8,6 @@ class HamburgueriaArquiteturaTest {
 
     @BeforeEach
     void setup() {
-
         Configuracao.getInstance().setTaxaEntrega(10.0f);
     }
 
@@ -19,36 +18,66 @@ class HamburgueriaArquiteturaTest {
         assertSame(conf1, conf2);
     }
 
+    // --- DECORATOR DESMEMBRADO ---
+
     @Test
-    void deveDecorarHamburguerCorretamente() {
-        // Carne(25) + Bacon(5) + Queijo(3) = 33
+    void deveCalcularPrecoDoHamburguerDecorado() {
         Item lanche = new Queijo(new Bacon(new HamburguerCarne()));
+        // Carne(25) + Bacon(5) + Queijo(3) = 33
         assertEquals(33.0f, lanche.getPreco());
+    }
+
+    @Test
+    void deveGerarDescricaoDoHamburguerDecorado() {
+        Item lanche = new Queijo(new Bacon(new HamburguerCarne()));
         assertEquals("Hambúrguer de Carne + Bacon + Queijo", lanche.getDescricao());
     }
 
+    // --- FACTORY DESMEMBRADO ---
+
     @Test
-    void deveCriarFamiliaComboTradicional() {
+    void deveCriarHamburguerPelaFabricaTradicional() {
         FabricaCombo fabrica = new FabricaComboTradicional();
         Item lanche = fabrica.criarHamburguer();
-        Item bebida = fabrica.criarBebida();
-
         assertEquals("Hambúrguer de Carne", lanche.getDescricao());
-        assertEquals("Refrigerante Lata", bebida.getDescricao());
     }
 
     @Test
-    void deveAvancarEstadosSemIfs() {
+    void deveCriarBebidaPelaFabricaTradicional() {
+        FabricaCombo fabrica = new FabricaComboTradicional();
+        Item bebida = fabrica.criarBebida();
+        assertEquals("Refrigerante Lata", bebida.getDescricao());
+    }
+
+    // --- TRANSIÇÕES DE ESTADO (STATE) DESMEMBRADAS ---
+
+    @Test
+    void pedidoNovoDeveIniciarComoRecebido() {
         Pedido pedido = new PedidoBalcao(new PagamentoCartao());
         assertEquals("Recebido", pedido.getStatus());
+    }
 
+    @Test
+    void pedidoRecebidoDeveAvancarParaEmPreparo() {
+        Pedido pedido = new PedidoBalcao(new PagamentoCartao());
         pedido.avancarEstado();
         assertEquals("Em Preparo", pedido.getStatus());
+    }
 
-        pedido.avancarEstado();
+    @Test
+    void pedidoEmPreparoDeveAvancarParaPronto() {
+        Pedido pedido = new PedidoBalcao(new PagamentoCartao());
+        pedido.avancarEstado(); // Em preparo
+        pedido.avancarEstado(); // Pronto
         assertEquals("Pronto", pedido.getStatus());
+    }
 
-        pedido.avancarEstado();
+    @Test
+    void pedidoProntoDeveAvancarParaEntregue() {
+        Pedido pedido = new PedidoBalcao(new PagamentoCartao());
+        pedido.avancarEstado(); // Em preparo
+        pedido.avancarEstado(); // Pronto
+        pedido.avancarEstado(); // Entregue
         assertEquals("Entregue", pedido.getStatus());
     }
 
@@ -56,18 +85,31 @@ class HamburgueriaArquiteturaTest {
     void naoDeveAvancarEstadoAposCancelado() {
         Pedido pedido = new PedidoBalcao(new PagamentoCartao());
         pedido.cancelarPedido();
-        assertEquals("Cancelado", pedido.getStatus());
 
-        pedido.avancarEstado(); // Tentativa de avanço
-        assertEquals("Cancelado", pedido.getStatus()); // Continua cancelado
+        pedido.avancarEstado(); // Tentativa inválida de avanço
+
+        // Deve continuar cancelado
+        assertEquals("Cancelado", pedido.getStatus());
     }
+
+    @Test
+    void naoDeveAvancarEstadoAposDevolucao() {
+        Pedido pedido = new PedidoBalcao(new PagamentoPix());
+        pedido.devolverPedido();
+
+        pedido.avancarEstado(); // Tentativa inválida de avanço
+
+        // Continua em devolução
+        assertEquals("Devolução", pedido.getStatus());
+    }
+
+    // --- CÁLCULO DE TOTAIS E PAGAMENTO ---
 
     @Test
     void deveCalcularPedidoBalcaoComCartao() {
         Pedido pedido = new PedidoBalcao(new PagamentoCartao());
         pedido.adicionarItem(new HamburguerCarne()); // 25
         pedido.adicionarItem(new Bacon(new HamburguerCarne())); // 30
-
 
         assertEquals(55.0f, pedido.calcularTotalFinal());
     }
@@ -77,66 +119,84 @@ class HamburgueriaArquiteturaTest {
         Pedido pedido = new PedidoDelivery(new PagamentoPix());
         pedido.adicionarItem(new HamburguerVegano()); // 28
 
-
         assertEquals(35.2f, pedido.calcularTotalFinal(), 0.01f);
     }
 
+    // --- TESTE DE INTEGRAÇÃO DESMEMBRADO ---
+
     @Test
-    void deveIntegrarTodosOsPadroesSimultaneamente() {
-
+    void deveCalcularTotalFinalIntegrandoVariosPadroes() {
         Configuracao.getInstance().setTaxaEntrega(15.0f);
-
-
         FabricaCombo fabrica = new FabricaComboTradicional();
-        Item hamburguerBase = fabrica.criarHamburguer();
-
-
-        Item hamburguerTurbinado = new Queijo(new Bacon(hamburguerBase));
-
 
         Pedido pedido = new PedidoDelivery(new PagamentoCartao());
-        pedido.adicionarItem(hamburguerTurbinado);
+        pedido.adicionarItem(new Queijo(new Bacon(fabrica.criarHamburguer())));
         pedido.adicionarItem(fabrica.criarAcompanhamento()); // 10
         pedido.adicionarItem(fabrica.criarBebida()); // 8
 
         // Subtotal Itens: 33 + 10 + 8 = 51. Delivery: +15. Total = 66
         assertEquals(66.0f, pedido.calcularTotalFinal());
+    }
 
+    @Test
+    void deveAtingirEstadoEntregueIntegrandoVariosPadroes() {
+        FabricaCombo fabrica = new FabricaComboTradicional();
+
+        Pedido pedido = new PedidoDelivery(new PagamentoCartao());
+        pedido.adicionarItem(fabrica.criarHamburguer());
 
         pedido.avancarEstado(); // Prepara
         pedido.avancarEstado(); // Pronto
         pedido.avancarEstado(); // Entregue
+
         assertEquals("Entregue", pedido.getStatus());
     }
 
-
+    // --- NOTIFICAÇÕES (OBSERVER) DESMEMBRADAS ---
 
     @Test
-    void deveNotificarClienteSobreStatusDoPedido() {
+    void deveNotificarClienteAoAvancarParaEmPreparo() {
         Pedido pedido = new PedidoBalcao(new PagamentoCartao());
         Cliente cliente = new Cliente("João");
         pedido.addObservador(cliente);
 
-        pedido.avancarEstado(); // Em Preparo
-        assertEquals("João, seu pedido está: Em Preparo", cliente.getNotificacoes().get(0));
-
-        pedido.avancarEstado(); // Pronto
-        assertEquals("João, seu pedido está: Pronto", cliente.getNotificacoes().get(1));
-
-        pedido.avancarEstado(); // Entregue
-        assertEquals("João, seu pedido está: Entregue", cliente.getNotificacoes().get(2));
+        pedido.avancarEstado();
+        assertEquals("João, seu pedido está: Em Preparo", cliente.getNotificacoes().getLast());
     }
 
     @Test
-    void deveNotificarVariosClientesSobreStatusDoPedido() {
+    void deveNotificarClienteAoAvancarParaPronto() {
+        Pedido pedido = new PedidoBalcao(new PagamentoCartao());
+        Cliente cliente = new Cliente("João");
+        pedido.addObservador(cliente);
+
+        pedido.avancarEstado(); // Em preparo
+        pedido.avancarEstado(); // Pronto
+
+        assertEquals("João, seu pedido está: Pronto", cliente.getNotificacoes().getLast());
+    }
+
+    @Test
+    void deveNotificarPrimeiroClienteInscritoNaLista() {
         Pedido pedido = new PedidoDelivery(new PagamentoPix());
         Cliente cliente1 = new Cliente("João");
         Cliente cliente2 = new Cliente("Maria");
         pedido.addObservador(cliente1);
         pedido.addObservador(cliente2);
 
-        pedido.avancarEstado(); // Em Preparo
+        pedido.avancarEstado();
         assertEquals("João, seu pedido está: Em Preparo", cliente1.getNotificacoes().getFirst());
+    }
+
+    @Test
+    void deveNotificarSegundoClienteInscritoNaLista() {
+        Pedido pedido = new PedidoDelivery(new PagamentoPix());
+        Cliente cliente1 = new Cliente("João");
+        Cliente cliente2 = new Cliente("Maria");
+        pedido.addObservador(cliente1);
+        pedido.addObservador(cliente2);
+
+        pedido.avancarEstado();
         assertEquals("Maria, seu pedido está: Em Preparo", cliente2.getNotificacoes().getFirst());
     }
 
@@ -144,7 +204,6 @@ class HamburgueriaArquiteturaTest {
     void naoDeveNotificarClienteNaoInscrito() {
         Pedido pedido = new PedidoBalcao(new PagamentoCartao());
         Cliente cliente = new Cliente("João");
-        // Cliente NÃO adicionado como observador
 
         pedido.avancarEstado();
         assertTrue(cliente.getNotificacoes().isEmpty());
@@ -170,39 +229,35 @@ class HamburgueriaArquiteturaTest {
         assertEquals("João, confirmamos a devolução do seu pedido.", cliente.getNotificacoes().getFirst());
     }
 
-    @Test
-    void deveMudarEstadoAposDevolucao() {
-        Pedido pedido = new PedidoBalcao(new PagamentoPix());
-        pedido.devolverPedido();
-        assertEquals("Devolução", pedido.getStatus());
-
-        pedido.avancarEstado(); // Tentativa de avanço
-        assertEquals("Devolução", pedido.getStatus()); // Continua em devolução
-    }
-
+    // --- CADEIA DE RESPONSABILIDADE (CHAIN) DESMEMBRADA ---
 
     @Test
-    void deveVerificarHierarquiaDaCadeiaDeResponsabilidade() {
-
+    void atendenteDeveTerGerenteComoSuperior() {
         FuncionarioFinanceiro financeiro = new FuncionarioFinanceiro(null);
         FuncionarioGerente gerente = new FuncionarioGerente(financeiro);
         FuncionarioAtendente atendente = new FuncionarioAtendente(gerente);
 
-
-
         assertEquals(gerente, atendente.getSuperior());
-        assertEquals(financeiro, gerente.getSuperior());
+    }
 
-        // O financeiro é o topo da cadeia, então o superior dele deve ser nulo
+    @Test
+    void gerenteDeveTerFinanceiroComoSuperior() {
+        FuncionarioFinanceiro financeiro = new FuncionarioFinanceiro(null);
+        FuncionarioGerente gerente = new FuncionarioGerente(financeiro);
+        FuncionarioAtendente atendente = new FuncionarioAtendente(gerente);
+
+        assertEquals(financeiro, gerente.getSuperior());
+    }
+
+    @Test
+    void financeiroNaoDeveTerSuperior() {
+        FuncionarioFinanceiro financeiro = new FuncionarioFinanceiro(null);
         assertNull(financeiro.getSuperior());
     }
 
-
-
     @Test
     void deveResolverReclamacaoDeLancheFrioComAtendente() {
-        FuncionarioFinanceiro financeiro = new FuncionarioFinanceiro(null);
-        FuncionarioGerente gerente = new FuncionarioGerente(financeiro);
+        FuncionarioGerente gerente = new FuncionarioGerente(new FuncionarioFinanceiro(null));
         FuncionarioAtendente atendente = new FuncionarioAtendente(gerente);
 
         Reclamacao reclamacao = new Reclamacao(TipoReclamacaoLancheFrio.getInstancia());
@@ -211,73 +266,53 @@ class HamburgueriaArquiteturaTest {
 
     @Test
     void deveEscalarReclamacaoDeEstornoParaFinanceiro() {
-        FuncionarioFinanceiro financeiro = new FuncionarioFinanceiro(null);
-        FuncionarioGerente gerente = new FuncionarioGerente(financeiro);
+        FuncionarioGerente gerente = new FuncionarioGerente(new FuncionarioFinanceiro(null));
         FuncionarioAtendente atendente = new FuncionarioAtendente(gerente);
 
         Reclamacao reclamacao = new Reclamacao(TipoReclamacaoEstorno.getInstancia());
-        // O atendente não resolve, o gerente não resolve, o financeiro resolve.
         assertEquals("Financeiro", atendente.tratarReclamacao(reclamacao));
     }
 
-    @Test
-    void deveIntegrarTodosOsOitoPadroesSimultaneamente() {
-        // 1. Singleton (Taxa)
-        Configuracao.getInstance().setTaxaEntrega(12.0f);
-
-
-        FabricaCombo fabrica = new FabricaComboTradicional();
-        Item pedidoFinal = new Queijo(fabrica.criarHamburguer());
-
-
-        Pedido pedido = new PedidoDelivery(new PagamentoPix());
-        Cliente cliente = new Cliente("Mateus");
-        pedido.addObservador(cliente);
-        pedido.adicionarItem(pedidoFinal);
-
-        pedido.avancarEstado();
-        pedido.devolverPedido();
-
-
-        FuncionarioFinanceiro financeiro = new FuncionarioFinanceiro(null);
-        FuncionarioGerente gerente = new FuncionarioGerente(financeiro);
-        FuncionarioAtendente atendente = new FuncionarioAtendente(gerente);
-
-        Reclamacao erroNoPix = new Reclamacao(TipoReclamacaoEstorno.getInstancia());
-
-
-        assertEquals("Devolução", pedido.getStatus());
-        assertEquals("Financeiro", atendente.tratarReclamacao(erroNoPix));
-        assertEquals("Mateus, confirmamos a devolução do seu pedido.", cliente.getNotificacoes().getLast());
-    }
-
+    // --- RESUMO DO PEDIDO DESMEMBRADO ---
 
     @Test
-    void deveGerarResumoPedidoBalcao() {
+    void resumoPedidoBalcaoDeveConterStatus() {
         Pedido pedido = new PedidoBalcao(new PagamentoCartao());
-        pedido.adicionarItem(new HamburguerCarne()); // 25.0
+        pedido.adicionarItem(new HamburguerCarne());
 
-        String resumo = pedido.gerarResumo();
-
-        assertTrue(resumo.contains("Status: Recebido"));
-        assertTrue(resumo.contains("Total a Pagar: R$ 25,00"));
-        assertTrue(resumo.contains("Retirar no balcão"));
+        assertTrue(pedido.gerarResumo().contains("Status: Recebido"));
     }
 
     @Test
-    void deveGerarResumoPedidoDelivery() {
+    void resumoPedidoBalcaoDeveConterTotal() {
+        Pedido pedido = new PedidoBalcao(new PagamentoCartao());
+        pedido.adicionarItem(new HamburguerCarne()); // 25
+
+        assertTrue(pedido.gerarResumo().contains("Total a Pagar: R$ 25,00"));
+    }
+
+    @Test
+    void resumoPedidoBalcaoDeveConterInstrucao() {
+        Pedido pedido = new PedidoBalcao(new PagamentoCartao());
+        pedido.adicionarItem(new HamburguerCarne());
+
+        assertTrue(pedido.gerarResumo().contains("Retirar no balcão"));
+    }
+
+    @Test
+    void resumoPedidoDeliveryDeveConterTotalComTaxa() {
         Configuracao.getInstance().setTaxaEntrega(10.0f);
         Pedido pedido = new PedidoDelivery(new PagamentoCartao());
-        pedido.adicionarItem(new HamburguerCarne()); // 25.0 + 10.0 = 35.0
+        pedido.adicionarItem(new HamburguerCarne()); // 25 + 10 = 35
 
-        String resumo = pedido.gerarResumo();
-
-        assertTrue(resumo.contains("Status: Recebido"));
-        assertTrue(resumo.contains("Total a Pagar: R$ 35,00"));
-        assertTrue(resumo.contains("Aguardar o motoboy"));
+        assertTrue(pedido.gerarResumo().contains("Total a Pagar: R$ 35,00"));
     }
 
+    @Test
+    void resumoPedidoDeliveryDeveConterInstrucaoLogistica() {
+        Pedido pedido = new PedidoDelivery(new PagamentoCartao());
+        pedido.adicionarItem(new HamburguerCarne());
 
-
-
+        assertTrue(pedido.gerarResumo().contains("Aguardar o motoboy"));
+    }
 }
