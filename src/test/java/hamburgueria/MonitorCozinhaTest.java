@@ -1,84 +1,90 @@
 package hamburgueria;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MonitorCozinhaTest {
 
-    @Test
-    void deveIterarIgnorandoPedidosCancelados() {
-        MonitorCozinha monitor = new MonitorCozinha();
+    private MonitorCozinha monitor;
+    private Pedido pedidoBalcao;
+    private Pedido pedidoDelivery;
+    private Pedido pedidoCancelado;
 
-        Pedido p1 = new PedidoBuilder()
+    @BeforeEach
+    void setUp() {
+        monitor = new MonitorCozinha();
+
+        pedidoBalcao = new PedidoBuilder()
                 .setTipoPedido("Balcao")
                 .setFormaPagamento(new PagamentoPix())
                 .adicionarItem(new HamburguerCarne())
                 .build();
-        monitor.receberPedido(p1);
 
-        Pedido p2 = new PedidoBuilder()
+        pedidoDelivery = new PedidoBuilder()
+                .setTipoPedido("Delivery")
+                .setFormaPagamento(new PagamentoPix())
+                .adicionarItem(new Refrigerante())
+                .build();
+
+        pedidoCancelado = new PedidoBuilder()
                 .setTipoPedido("Delivery")
                 .setFormaPagamento(new PagamentoPix())
                 .adicionarItem(new BatataFrita())
                 .build();
-        p2.cancelarPedido();
-        monitor.receberPedido(p2);
+        pedidoCancelado.cancelarPedido();
 
-        Pedido p3 = new PedidoBuilder()
-                .setTipoPedido("Balcao")
-                .setFormaPagamento(new PagamentoPix())
-                .adicionarItem(new Refrigerante())
-                .build();
-        monitor.receberPedido(p3);
+        // Popula o monitor com um cenário base para todos os testes
+        monitor.receberPedido(pedidoBalcao);
+        monitor.receberPedido(pedidoCancelado);
+        monitor.receberPedido(pedidoDelivery);
+    }
 
-        int contagemCozinha = 0;
-        for (Pedido pedidoVisivel : monitor) {
-            contagemCozinha++;
-            assertFalse(pedidoVisivel.isCancelado());
-        }
+    // --- TESTES DE IGNORAR CANCELADOS ---
 
-        assertEquals(2, contagemCozinha);
+    @Test
+    void deveContarApenasPedidosNaoCanceladosNaCozinha() {
+        // Dos 3 inseridos no setUp, 1 está cancelado. Devem sobrar 2.
+        List<Pedido> visiveis = monitor.obterPedidosVisiveis();
+        assertEquals(2, visiveis.size());
     }
 
     @Test
-    void deveIterarFiltrandoApenasPedidosDoBalcao() {
-        MonitorCozinha monitor = new MonitorCozinha();
+    void naoDeveConterOObjetoCanceladoNaListaDaCozinha() {
+        List<Pedido> visiveis = monitor.obterPedidosVisiveis();
+        assertFalse(visiveis.contains(pedidoCancelado));
+    }
 
+    // --- TESTES DE FILTRO DE TIPO ---
 
-        monitor.receberPedido(new PedidoBuilder().setTipoPedido("Balcao").setFormaPagamento(new PagamentoPix()).adicionarItem(new HamburguerCarne()).build());
-        monitor.receberPedido(new PedidoBuilder().setTipoPedido("Delivery").setFormaPagamento(new PagamentoPix()).adicionarItem(new BatataFrita()).build());
-        monitor.receberPedido(new PedidoBuilder().setTipoPedido("Delivery").setFormaPagamento(new PagamentoPix()).adicionarItem(new Refrigerante()).build()); // <-- Alterado aqui!
-        monitor.receberPedido(new PedidoBuilder().setTipoPedido("Balcao").setFormaPagamento(new PagamentoPix()).adicionarItem(new HamburguerCarne()).build());
-
+    @Test
+    void deveContarApenasPedidosDoFiltroBalcao() {
         monitor.setFiltroAtivo("Balcao");
+        List<Pedido> visiveis = monitor.obterPedidosVisiveis();
 
-        int contagemBalcao = 0;
-        for (Pedido pedidoVisivel : monitor) {
-            contagemBalcao++;
-            assertEquals("Balcao", pedidoVisivel.getTipoPedido());
-        }
-
-
-        assertEquals(2, contagemBalcao);
+        // Apenas 1 pedido válido do Balcão foi inserido no setUp
+        assertEquals(1, visiveis.size());
     }
 
     @Test
-    void deveIterarLimpandoOFiltroParaMostrarTodosOsPedidos() {
-        MonitorCozinha monitor = new MonitorCozinha();
-
-
-        monitor.receberPedido(new PedidoBuilder().setTipoPedido("Balcao").setFormaPagamento(new PagamentoPix()).adicionarItem(new HamburguerCarne()).build());
-        monitor.receberPedido(new PedidoBuilder().setTipoPedido("Delivery").setFormaPagamento(new PagamentoPix()).adicionarItem(new Refrigerante()).build());
-
+    void deveGarantirQueOItemFiltradoSejaRealmenteDoBalcao() {
         monitor.setFiltroAtivo("Balcao");
-        monitor.limparFiltro();
+        List<Pedido> visiveis = monitor.obterPedidosVisiveis();
 
-        int contagemTotal = 0;
-        for (Pedido pedidoVisivel : monitor) {
-            contagemTotal++;
-        }
-
-        assertEquals(2, contagemTotal);
+        assertEquals("Balcao", visiveis.get(0).getTipoPedido());
     }
 
+    // --- TESTES DE LIMPEZA DE FILTRO ---
+
+    @Test
+    void deveMostrarTodosOsPedidosValidosAposLimparOFiltro() {
+        monitor.setFiltroAtivo("Balcao"); // Aplica o filtro
+        monitor.limparFiltro();           // Remove o filtro
+
+        List<Pedido> visiveis = monitor.obterPedidosVisiveis();
+
+        // Deve voltar a mostrar os 2 pedidos válidos (ignorando o cancelado)
+        assertEquals(2, visiveis.size());
+    }
 }
