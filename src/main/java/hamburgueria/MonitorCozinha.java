@@ -27,4 +27,15 @@ public class MonitorCozinha implements Iterable<Pedido> {
 
         return new IteratorPedidosCozinha(filaDePreparo, filtroAtivo);
     }
+
+    // --- NOVO MÉTODO (Encapsulando a lógica para o teste) ---
+    public List<Pedido> obterPedidosVisiveis() {
+        List<Pedido> pedidosVisiveis = new ArrayList<>();
+
+        for (Pedido pedido : this) {
+            pedidosVisiveis.add(pedido);
+        }
+        return pedidosVisiveis;
+    }
+
 }
