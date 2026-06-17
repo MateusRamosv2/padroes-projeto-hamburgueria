@@ -5,23 +5,46 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DetalheItemFactoryTest {
 
+    // --- TESTE DO PADRÃO FLYWEIGHT ---
+
     @Test
-    void deveCompartilharDetalhesPesadosNaMemoriaParaMilharesDePedidos() {
+    void deveArmazenarApenasInstanciasUnicasNaMemoriaFlyweight() {
+        // Instancia 5 objetos, mas que compartilham apenas 2 tipos
+        new HamburguerCarne();
+        new HamburguerCarne();
+        new BatataFrita();
+        new HamburguerCarne();
+        new BatataFrita();
 
-        Item pedidoCliente1 = new HamburguerCarne();
-        Item pedidoCliente2 = new HamburguerCarne();
-        Item pedidoCliente3 = new BatataFrita();
-        Item pedidoCliente4 = new HamburguerCarne();
-        Item pedidoCliente5 = new BatataFrita();
-
-
+        // O cache deve conter apenas 2 instâncias pesadas salvas
         assertEquals(2, DetalheItemFactory.getTotalDetalhesEmMemoria());
+    }
 
+    // --- TESTES DE ATRIBUTOS (HAMBÚRGUER) ---
 
-        assertEquals("Hambúrguer de Carne", pedidoCliente1.getDescricao());
-        assertEquals(25.0f, pedidoCliente1.getPreco());
+    @Test
+    void deveRetornarDescricaoCorretaDoHamburguerCarne() {
+        Item pedidoCliente = new HamburguerCarne();
+        assertEquals("Hambúrguer de Carne", pedidoCliente.getDescricao());
+    }
 
-        assertEquals("Batata Frita Média", pedidoCliente3.getDescricao());
-        assertEquals(10.0f, pedidoCliente3.getPreco());
+    @Test
+    void deveRetornarPrecoCorretoDoHamburguerCarne() {
+        Item pedidoCliente = new HamburguerCarne();
+        assertEquals(25.0f, pedidoCliente.getPreco());
+    }
+
+    // --- TESTES DE ATRIBUTOS (BATATA FRITA) ---
+
+    @Test
+    void deveRetornarDescricaoCorretaDaBatataFrita() {
+        Item pedidoCliente = new BatataFrita();
+        assertEquals("Batata Frita Média", pedidoCliente.getDescricao());
+    }
+
+    @Test
+    void deveRetornarPrecoCorretoDaBatataFrita() {
+        Item pedidoCliente = new BatataFrita();
+        assertEquals(10.0f, pedidoCliente.getPreco());
     }
 }
