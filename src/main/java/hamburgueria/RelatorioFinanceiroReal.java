@@ -9,7 +9,6 @@ public class RelatorioFinanceiroReal implements RelatorioFinanceiro {
     public RelatorioFinanceiroReal(String dataFechamento) {
         this.dataFechamento = dataFechamento;
 
-        System.out.println("[Log BD] Calculando fluxo de caixa e faturamento para " + dataFechamento + "...");
     }
 
     @Override
