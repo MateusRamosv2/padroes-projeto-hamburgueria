@@ -1,28 +1,40 @@
 package hamburgueria;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class LoggiAdapterTest {
 
-    @Test
-    void deveDespacharPedidoViaApiExternaLoggiComSucesso() {
+    private IntegracaoLogistica logisticaTerceirizada;
+    private PedidoDelivery pedido;
+    private static final String ENDERECO_TESTE = "Avenida Brasil, 1500";
+    private String respostaDespacho;
+
+    @BeforeEach
+    void setUp() {
 
         FormaPagamento cartao = new PagamentoCartao();
-        PedidoDelivery pedido = new PedidoDelivery(cartao);
+        pedido = new PedidoDelivery(cartao);
         pedido.adicionarItem(new HamburguerCarne());
 
-
         ApiLoggiExterna servicoLoggi = new ApiLoggiExterna();
-        IntegracaoLogistica logisticaTerceirizada = new LoggiAdapter(servicoLoggi);
+        logisticaTerceirizada = new LoggiAdapter(servicoLoggi);
 
+        respostaDespacho = logisticaTerceirizada.despacharPedido(pedido, ENDERECO_TESTE);
+    }
 
-        String resposta = logisticaTerceirizada.despacharPedido(pedido, "Avenida Brasil, 1500");
+    // --- TESTES DE INTEGRAÇÃO COM A API EXTERNA (ADAPTER) ---
 
+    @Test
+    void deveConterOEnderecoDeDestinoNaMensagemDeDespachoDaLoggi() {
 
-        assertTrue(resposta.contains("Motoboy da Loggi a caminho de [Avenida Brasil, 1500]"));
+        assertTrue(respostaDespacho.contains("Motoboy da Loggi a caminho de [" + ENDERECO_TESTE + "]"));
+    }
 
+    @Test
+    void deveConterATagDeCobrancaComOValorTotalNaMensagemDeDespacho() {
 
-        assertTrue(resposta.contains("Valor a cobrar: R$"));
+        assertTrue(respostaDespacho.contains("Valor a cobrar: R$"));
     }
 }
