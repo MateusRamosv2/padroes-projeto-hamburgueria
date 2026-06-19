@@ -66,4 +66,15 @@ class CardapioTest {
         // Se este teste falhar, significa que o .clone() está fazendo cópia por referência errada
         assertFalse(comboOriginalProtegido.getDescricao().contains("Bacon"));
     }
+
+    @Test
+    void deveLancarExcecaoAoSolicitarComboNaoCadastrado() {
+        Cardapio cardapio = new Cardapio();
+        // Nenhuma chave foi cadastrada no setup
+
+        Exception excecao = assertThrows(IllegalArgumentException.class, () -> {
+            cardapio.solicitarCombo("COMBO_INEXISTENTE");
+        });
+        assertEquals("Combo não encontrado no cardápio!", excecao.getMessage());
+    }
 }

@@ -79,4 +79,17 @@ class PedidoBuilderTest {
         // Valida as instruções polimórficas do Delivery
         assertTrue(pedidoCompleto.gerarResumo().contains("Aguardar o motoboy"));
     }
+
+    @Test
+    void deveLancarExcecaoAoConstruirPedidoComTipoInvalido() {
+        PedidoBuilder builder = new PedidoBuilder();
+        builder.setFormaPagamento(new PagamentoPix())
+                .adicionarItem(new HamburguerCarne())
+                .setTipoPedido("Drone"); // Um tipo que não é Balcao nem Delivery
+
+        Exception excecao = assertThrows(IllegalArgumentException.class, () -> {
+            builder.build();
+        });
+        assertEquals("Tipo de pedido inválido", excecao.getMessage());
+    }
 }
