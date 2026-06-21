@@ -5,6 +5,35 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DetalheItemFactoryTest {
 
+
+    @Test
+    void deveRetornarExatamenteAMesmaInstanciaEmMemoriaParaChavesIguais() {
+
+        DetalheItem item1 = DetalheItemFactory.getDetalhe("Milkshake", 15.0f, "milk.png", "500 kcal");
+
+        DetalheItem item2 = DetalheItemFactory.getDetalhe("Milkshake", 15.0f, "milk.png", "500 kcal");
+
+        assertSame(item1, item2);
+    }
+
+    @Test
+    void deveRenderizarAplicativoComSucessoCobrindoOMetodoNaoUtilizado() {
+
+        DetalheItem item = DetalheItemFactory.getDetalhe("Suco Natural", 8.0f, "img_suco.png", "Vitamina C");
+
+        assertEquals("Exibindo [img_suco.png] - Vitamina C", item.renderizarParaApp());
+    }
+
+    @Test
+    void deveRetornarNomeEPrecoBaseCorretamenteDoDetalheItem() {
+
+        DetalheItem item = DetalheItemFactory.getDetalhe("Agua", 5.0f, "agua.png", "0 kcal");
+
+        assertEquals("Agua", item.getNome());
+        assertEquals(5.0f, item.getPrecoBase());
+    }
+
+
     // --- TESTE DO PADRÃO FLYWEIGHT ---
 
     @Test
