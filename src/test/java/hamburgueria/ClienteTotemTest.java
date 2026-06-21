@@ -64,4 +64,14 @@ class ClienteTotemTest {
 
         assertEquals("Índice de histórico inválido", excecao.getMessage());
     }
+
+
+
+    @Test
+    void deveLancarExcecaoAoTentarRestaurarIndiceNegativo() {
+        Exception excecao = assertThrows(IllegalArgumentException.class, () -> {
+            totem.restaurarPedidoAnterior(-1); // Limite inferior matemático
+        });
+        assertEquals("Índice de histórico inválido", excecao.getMessage());
+    }
 }
