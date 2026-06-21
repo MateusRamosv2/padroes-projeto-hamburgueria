@@ -74,4 +74,22 @@ class ClienteTotemTest {
         });
         assertEquals("Índice de histórico inválido", excecao.getMessage());
     }
+
+    @Test
+    void deveRetornarNomeDoClienteCorretamente() {
+        // Cobertura do método getNomeCliente()
+        ClienteTotem totemNovo = new ClienteTotem("João Silva");
+        assertEquals("João Silva", totemNovo.getNomeCliente());
+    }
+
+    @Test
+    void naoDeveSalvarNoHistoricoQuandoFinalizarCompraComCarrinhoVazio() {
+        // Cobertura do IF negativo no finalizarCompra()
+        ClienteTotem totemNovo = new ClienteTotem("Maria");
+        totemNovo.finalizarCompra(); // Tenta finalizar sem adicionar nada
+
+        // Como o carrinho estava vazio, o histórico deve permanecer 0
+        assertEquals(0, totemNovo.getQuantidadePedidosNoHistorico());
+    }
+
 }
