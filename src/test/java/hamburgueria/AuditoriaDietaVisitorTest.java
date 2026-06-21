@@ -54,4 +54,13 @@ class AuditoriaDietaVisitorTest {
         assertTrue(relatorioComboMonstro.contains("[Vegano] Batata Frita"));
     }
 
+    @Test
+    void deveAuditarHamburguerVeganoCorretamente() {
+        AuditoriaDietaVisitor auditor = new AuditoriaDietaVisitor();
+        HamburguerVegano vegano = new HamburguerVegano();
+
+        // Aciona o aceitar, que por sua vez aciona o método visitar() que estava sem cobertura
+        assertEquals("[Vegano] Hambúrguer à base de plantas/soja", vegano.aceitar(auditor));
+    }
+
 }
